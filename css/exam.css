@@ -75,3 +75,53 @@
 .exam-card:hover .exam-card-cta{
   background:var(--gold); color:var(--teal-deep, #fff); transform:translateX(2px);
 }
+
+/* ---- Exam consent modal — shown before leaving to the TechVerse platform.
+   Uses the shared .app-modal / .app-modal-box shell, with its own body
+   content styled here. ---- */
+.exam-consent-box{max-width:440px;}
+.exam-consent-text{
+  font-family:'Hind Siliguri',sans-serif; font-size:13.5px; line-height:1.85; color:var(--ink);
+  margin:0 0 12px;
+}
+.exam-consent-text:last-of-type{margin-bottom:16px;}
+.exam-consent-text a{
+  color:var(--gold); font-weight:700; text-decoration:underline; text-underline-offset:2px;
+}
+.exam-consent-links-line{margin-top:14px;}
+.exam-consent-steps{
+  list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:9px;
+}
+.exam-consent-steps li{
+  display:flex; align-items:flex-start; gap:10px; font-family:'Hind Siliguri',sans-serif;
+  font-size:13px; line-height:1.6; color:var(--ink);
+}
+.exam-consent-steps li i{
+  flex-shrink:0; width:26px; height:26px; border-radius:9px; background:var(--sage);
+  color:var(--gold); display:flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;
+}
+.exam-consent-agree{
+  display:flex; align-items:flex-start; gap:10px; cursor:pointer; padding:12px 13px;
+  background:var(--sage); border-radius:12px; margin-bottom:16px;
+}
+.exam-consent-agree input[type="checkbox"]{
+  width:18px; height:18px; flex-shrink:0; margin-top:1px; accent-color:var(--gold); cursor:pointer;
+}
+.exam-consent-agree span{
+  font-family:'Hind Siliguri',sans-serif; font-size:13px; font-weight:600; color:var(--ink); line-height:1.5;
+}
+.exam-consent-actions{display:flex; gap:10px;}
+.exam-consent-btn{
+  flex:1; border:none; border-radius:12px; padding:12px 14px; font-family:'Hind Siliguri',sans-serif;
+  font-weight:700; font-size:13.5px; cursor:pointer; display:inline-flex; align-items:center;
+  justify-content:center; gap:8px; transition:filter .15s ease, opacity .15s ease, transform .15s ease;
+}
+.exam-consent-btn:active{transform:scale(.97);}
+.exam-consent-cancel{background:var(--panel); color:var(--ink-soft); border:1px solid var(--line);}
+.exam-consent-cancel:hover{background:var(--sage);}
+.exam-consent-proceed{
+  background:linear-gradient(135deg, var(--gold) 0%, var(--gold-soft, var(--gold)) 100%);
+  color:var(--teal-deep, #fff); box-shadow:0 6px 16px -8px rgba(0,0,0,.35);
+}
+.exam-consent-proceed:hover:not(:disabled){filter:brightness(1.06);}
+.exam-consent-proceed:disabled{opacity:.5; cursor:not-allowed; box-shadow:none;}
