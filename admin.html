@@ -254,7 +254,9 @@ function init(){
 
 function startExamsListener(){
   const box = document.getElementById('examListBox');
-  examsUnsub = db.collection('exams').orderBy('createdAt', 'desc').onSnapshot(
+  // asc: প্রথমে যোগ করা পরীক্ষা উপরে — ইউজারের "পরীক্ষা" ট্যাবে যেই ক্রমে
+  // দেখানো হয়, এডমিন প্যানেলেও একই ক্রম রাখা হয়েছে।
+  examsUnsub = db.collection('exams').orderBy('createdAt', 'asc').onSnapshot(
     (snap) => {
       if(snap.empty){
         box.innerHTML = `<div class="empty-note">এখনো কোনো পরীক্ষা যোগ করা হয়নি।</div>`;
