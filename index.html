@@ -194,6 +194,50 @@
     </div>
   </section>
 
+  <!-- ================= EXAM CONSENT MODAL =================
+       একটা পরীক্ষা কার্ডে ট্যাপ করার পরে সরাসরি লিংক না খুলে এই মোডাল
+       দেখানো হয় — TechVerse প্ল্যাটফর্মে যাওয়ার আগে ব্যবহারকারীকে জানিয়ে
+       দেওয়া হয় যে সেখানে অ্যাকাউন্ট/Google সাইন-ইন লাগবে, এবং প্রাইভেসি
+       পলিসি ও হেল্প-সাপোর্ট পড়ার সুযোগ দেওয়া হয় — "এগিয়ে যান" বাটন
+       "I agree" চেকবক্স টিক না দেওয়া পর্যন্ত নিষ্ক্রিয় থাকে (js/exam.js
+       openExamConsentModal)। -->
+  <div class="app-modal" id="examConsentModal" style="display:none;">
+    <div class="app-modal-box exam-consent-box">
+      <div class="app-modal-head">
+        <div class="app-modal-head-title">
+          <h3><i class="fa-solid fa-circle-info"></i> পরীক্ষায় যাওয়ার আগে একটু পড়ে নিন</h3>
+        </div>
+        <button class="app-modal-close" id="examConsentClose">✕</button>
+      </div>
+      <div class="app-modal-body">
+        <p class="exam-consent-text">
+          এই পরীক্ষাটি আমাদের কুরআন বাংলা অ্যাপে নয়, বরং আমাদের পার্টনার <strong>TechVerse</strong> প্ল্যাটফর্মে অনুষ্ঠিত হয়। তাই "এগিয়ে যান"-এ চাপ দিলে আপনাকে TechVerse-এর ওয়েবসাইটে নিয়ে যাওয়া হবে।
+        </p>
+        <ul class="exam-consent-steps">
+          <li><i class="fa-solid fa-user-plus"></i><span>পরীক্ষা শুরু করতে প্রথমে সেখানে একটি অ্যাকাউন্ট তৈরি করতে হবে।</span></li>
+          <li><i class="fa-brands fa-google"></i><span>আগে থেকে অ্যাকাউন্ট না থাকলে চিন্তা নেই — সরাসরি Google দিয়ে সহজেই সাইন ইন করতে পারবেন।</span></li>
+        </ul>
+        <p class="exam-consent-text exam-consent-links-line">
+          যাওয়ার আগে একবার চোখ বুলিয়ে নিতে পারেন তাদের
+          <a href="https://tvcourse.vercel.app/#/privacy" target="_blank" rel="noopener">প্রাইভেসি পলিসি</a>
+          এবং
+          <a href="https://tvcourse.vercel.app/#/help" target="_blank" rel="noopener">হেল্প অ্যান্ড সাপোর্ট</a>
+          পেজে।
+        </p>
+        <label class="exam-consent-agree">
+          <input type="checkbox" id="examConsentCheck">
+          <span>আমি উপরের তথ্যগুলো পড়েছি এবং TechVerse প্ল্যাটফর্মে যেতে সম্মত (I agree)</span>
+        </label>
+        <div class="exam-consent-actions">
+          <button class="exam-consent-btn exam-consent-cancel" id="examConsentCancel">বন্ধ করুন</button>
+          <button class="exam-consent-btn exam-consent-proceed" id="examConsentProceed" disabled>
+            এগিয়ে যান <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= PROFILE ================= -->
   <!-- সাইন আপ/লগইন এবং সাইন-ইন করা প্রোফাইল — সরাসরি এই পেজেই দেখানো হয়,
        কোনো পপ-আপ/মডাল হিসেবে নয় (দেখুন js/profile-view.js)। -->
