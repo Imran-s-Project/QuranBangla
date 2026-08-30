@@ -38,6 +38,7 @@
 <link rel="stylesheet" href="css/notes.css">
 <link rel="stylesheet" href="css/ramadan.css">
 <link rel="stylesheet" href="css/auth.css">
+<link rel="stylesheet" href="css/exam.css">
 <link rel="stylesheet" href="css/tajweed.css">
 <link rel="stylesheet" href="css/qibla.css">
 <link rel="stylesheet" href="css/download-manager.css">
@@ -168,10 +169,14 @@
       <button class="hadith-jump-btn" id="hadithJumpBtn"><i class="fa-solid fa-magnifying-glass"></i> হাদিস নম্বর দিয়ে খুঁজুন</button>
       <div id="hadithChaptersList"></div>
     </div>
-    <div id="hadithListContainer" style="display:none;">
-      <button class="back-btn" id="hadithListBackBtn">← অধ্যায়ে ফিরুন</button>
-      <div id="hadithChapterHead"></div>
-      <div id="hadithListBody"></div>
+  <!-- ================= EXAM ================= -->
+  <section class="view" id="view-exam">
+    <div class="exam-page-head">
+      <h2><i class="fa-solid fa-pen-to-square"></i> পরীক্ষা দিন</h2>
+      <p>নিচের যেকোনো পরীক্ষায় ট্যাপ করলেই সরাসরি সেই পরীক্ষা শুরু হবে।</p>
+    </div>
+    <div id="examListContainer">
+      <div class="loader"><div class="spinner"></div><span>লোড হচ্ছে...</span></div>
     </div>
   </section>
 
@@ -203,6 +208,10 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
     <span data-i18n="nav_stats">পরিসংখ্যান</span>
   </button>
+  <button class="bn-item" data-view="exam">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    <span>পরীক্ষা</span>
+  </button>
 </nav>
 
 <!-- Hamburger "more" drawer -->
@@ -219,6 +228,7 @@
     <button class="drawer-item" id="drawerQibla"><span class="di-ic"><i class="fa-solid fa-kaaba"></i></span> <span>কিবলার দিক</span></button>
     <button class="drawer-item" id="drawerTaraweeh"><span class="di-ic"><i class="fa-solid fa-moon"></i></span> <span>তারাবীহ ট্র্যাকার</span></button>
     <button class="drawer-item" id="drawerDictionary"><span class="di-ic"><i class="fa-solid fa-book-open"></i></span> <span data-i18n="menu_dictionary">অভিধান</span></button>
+    <button class="drawer-item" id="drawerExam"><span class="di-ic"><i class="fa-solid fa-pen-to-square"></i></span> <span>পরীক্ষা দিন</span></button>
     <button class="drawer-item" id="drawerDownloads"><span class="di-ic"><i class="fa-solid fa-cloud-arrow-down"></i></span> <span>ডাউনলোড ম্যানেজার</span></button>
     <button class="drawer-item" id="drawerOtherApps"><span class="di-ic"><i class="fa-solid fa-mobile-screen-button"></i></span> <span data-i18n="menu_other_apps">আমাদের অন্যান্য অ্যাপস</span></button>
     <button class="drawer-item" id="drawerSettings"><span class="di-ic"><i class="fa-solid fa-gear"></i></span> <span data-i18n="menu_settings">সেটিংস</span></button>
@@ -638,6 +648,7 @@
 <script src="js/qibla.js" defer></script>
 <script src="js/nav.js" defer></script>
 <script src="js/menu.js" defer></script>
+<script src="js/exam.js" defer></script>
 <script src="js/translation-help.js" defer></script>
 <script src="js/download-manager.js" defer></script>
 <script src="js/auto-offline.js" defer></script>

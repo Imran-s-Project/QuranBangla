@@ -2,15 +2,70 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // এডমিন কিনা চেক করার হেল্পার ফাংশন
+    // এডমিন কিনা চেক করার হেল্পার ফাংশন — শুধু ডকুমেন্ট থাকলেই না, তার ভেতরে
+    // isAdmin: true ফিল্ডও সত্যি হতে হবে। এতে করে admins/{uid} ডকুমেন্টে ভুলবশত
+    // অন্য কোনো ফিল্ড (যেমন খালি ডক বা isAdmin:false) থাকলে সেটা আর এডমিন
+    // হিসেবে গণ্য হবে না — শুধু ডক "exists" করাটা যথেষ্ট শর্ত নয়।
     function isAdmin() {
       return request.auth != null &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
     }
 
     match /admins/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if false; // Firebase Console থেকে ম্যানুয়ালি যোগ/বাদ দিতে হবে
+      allow write: if false; // Firebase Console থেকে ম্যানুয়ালি { isAdmin: true } দিয়ে যোগ/বাদ দিতে হবে
+    }
+
+    // ------------------------------------------------------------------
+    // এক্সামের লিংক (admin.html থেকে যোগ/এডিট/মুছে ফেলা হয়, index.html-এ
+    // "পরীক্ষা" ট্যাবে সবাই রিয়েল-টাইমে দেখে — js/exam.js)।
+    //
+    // সবাই পড়তে পারবে, কিন্তু লেখা (যোগ/পরিবর্তন/মোছা) শুধু isAdmin()
+    // সত্যি হলেই সম্ভব — এবং শুধু isAdmin() যথেষ্ট না, নিচের প্রতিটি শর্তও
+    // (কোন ফিল্ড থাকতে পারবে, কোনটার টাইপ কী, লিংক http(s):// দিয়ে শুরু কিনা,
+    // দৈর্ঘ্যের সীমা) একসাথে সত্যি হতে হবে — যাতে কোনো ভুল বা দূষিত (malformed)
+    // ডেটা কখনোই Firestore-এ ঢুকতে না পারে, এমনকি এডমিন অ্যাকাউন্ট থেকেও না।
+    // ------------------------------------------------------------------
+    match /exams/{examId} {
+      allow read: if true;
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['title','description','link','createdAt','createdBy','updatedAt'])
+        && request.resource.data.keys().hasAll(['title','link','createdAt'])
+        // title: বাধ্যতামূলক, ফাঁকা না, যুক্তিসঙ্গত দৈর্ঘ্যের মধ্যে
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        // description: ঐচ্ছিক, দিলে অবশ্যই string ও যুক্তিসঙ্গত দৈর্ঘ্যের
+        && (!('description' in request.resource.data)
+            || (request.resource.data.description is string && request.resource.data.description.size() <= 1000))
+        // link: বাধ্যতামূলক, শুধু http(s):// দিয়ে শুরু হতে পারবে —
+        // javascript:/data: এর মতো স্কিম ব্লক করে, যাতে ক্লিক করলেই কারো
+        // ব্রাউজারে স্ক্রিপ্ট চলে যাওয়ার সুযোগ না থাকে
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 2048
+        && request.resource.data.link.matches('^https?://.+')
+        // createdAt/createdBy: সার্ভার টাইমস্ট্যাম্প ও নিজের uid ছাড়া বসানো যাবে না
+        && request.resource.data.createdAt == request.time
+        && (!('createdBy' in request.resource.data) || request.resource.data.createdBy == request.auth.uid)
+        && !('updatedAt' in request.resource.data);
+
+      allow update: if isAdmin()
+        // createdAt/createdBy কখনো পরিবর্তন করা যাবে না — শুধু title/description/link/updatedAt
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','description','link','updatedAt'])
+        && request.resource.data.keys().hasOnly(['title','description','link','createdAt','createdBy','updatedAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && (!('description' in request.resource.data)
+            || (request.resource.data.description is string && request.resource.data.description.size() <= 1000))
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 2048
+        && request.resource.data.link.matches('^https?://.+')
+        && ('updatedAt' in request.resource.data) && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isAdmin();
     }
 
     match /users/{uid} {
