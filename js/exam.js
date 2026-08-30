@@ -94,7 +94,9 @@ function startExamRealtime(){
   if(examUnsub) return; // already listening
 
   examListenerStarted = true;
-  examUnsub = fbDb.collection('exams').orderBy('createdAt', 'desc')
+  // asc: প্রথমে যোগ করা পরীক্ষাগুলো উপরে থাকবে, নতুন যোগ হওয়া পরীক্ষা
+  // সবসময় তালিকার নিচে যুক্ত হবে (সিরিয়াল ধরে রাখতে)।
+  examUnsub = fbDb.collection('exams').orderBy('createdAt', 'asc')
     .onSnapshot(
       (snap) => {
         examListCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -146,9 +148,63 @@ function renderExamList(container){
       </div>
       <div class="exam-card-cta"><i class="fa-solid fa-arrow-right"></i></div>`;
 
-    const open = () => { if(exam.link) window.open(exam.link, '_blank', 'noopener'); };
+    const open = () => openExamConsentModal(exam.link);
     card.onclick = open;
     card.onkeydown = (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } };
     container.appendChild(card);
   });
+}
+
+// ---------- Exam consent modal ----------
+// Shown instead of opening the exam link directly: explains the exam runs
+// on the TechVerse platform (account / Google sign-in required there),
+// links out to their privacy policy + help pages, and requires the "I
+// agree" checkbox before "এগিয়ে যান" will actually open the link.
+let examConsentPendingLink = null;
+let examConsentWired = false;
+
+function openExamConsentModal(link){
+  if(!link) return;
+  examConsentPendingLink = link;
+  wireExamConsentModal();
+  const modal = document.getElementById('examConsentModal');
+  const check = document.getElementById('examConsentCheck');
+  const proceedBtn = document.getElementById('examConsentProceed');
+  if(check) check.checked = false;
+  if(proceedBtn) proceedBtn.disabled = true;
+  if(modal) modal.style.display = 'flex';
+}
+
+function closeExamConsentModal(){
+  const modal = document.getElementById('examConsentModal');
+  if(modal) modal.style.display = 'none';
+  examConsentPendingLink = null;
+}
+
+function wireExamConsentModal(){
+  if(examConsentWired) return;
+  examConsentWired = true;
+
+  const modal = document.getElementById('examConsentModal');
+  const check = document.getElementById('examConsentCheck');
+  const proceedBtn = document.getElementById('examConsentProceed');
+  const cancelBtn = document.getElementById('examConsentCancel');
+  const closeBtn = document.getElementById('examConsentClose');
+
+  if(check && proceedBtn){
+    check.addEventListener('change', () => { proceedBtn.disabled = !check.checked; });
+  }
+  if(proceedBtn){
+    proceedBtn.onclick = () => {
+      if(proceedBtn.disabled || !examConsentPendingLink) return;
+      window.open(examConsentPendingLink, '_blank', 'noopener');
+      closeExamConsentModal();
+    };
+  }
+  if(cancelBtn) cancelBtn.onclick = closeExamConsentModal;
+  if(closeBtn) closeBtn.onclick = closeExamConsentModal;
+  // ব্যাকড্রপে ট্যাপ করলেও বন্ধ হবে (বক্সের ভেতরে ক্লিক করলে বন্ধ হবে না)
+  if(modal){
+    modal.addEventListener('click', (e) => { if(e.target === modal) closeExamConsentModal(); });
+  }
 }
