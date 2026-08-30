@@ -261,6 +261,7 @@ function handleShortcutLaunch(){
   if(typeof initSmartStorage === 'function') initSmartStorage();
   if(typeof initForegroundPush === 'function') initForegroundPush();
   if(typeof initDonationBanner === 'function') initDonationBanner();
+  if(typeof initExam === 'function') initExam();
   initSearch();
   initPlayer();
   fetchSurahList();

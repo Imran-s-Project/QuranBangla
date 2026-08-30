@@ -1,5 +1,5 @@
 // ---------- Bottom navigation: switches between the 5 top-level views ----------
-const VIEW_IDS = ['home','planner','topics','library','stats','hadith'];
+const VIEW_IDS = ['home','planner','topics','library','stats','hadith','exam'];
 
 function goToView(view){
   VIEW_IDS.forEach(v => {
@@ -18,6 +18,7 @@ function goToView(view){
   if(view === 'library') renderActiveLibraryTab();
   if(view === 'stats') renderStatsView();
   if(view === 'hadith') showHadithBooksView();
+  if(view === 'exam' && typeof onExamViewOpened === 'function') onExamViewOpened();
   window.scrollTo(0,0);
   if(view !== 'home' && typeof onbMaybeStart === 'function') onbMaybeStart(view);
 }
@@ -107,6 +108,7 @@ function initMoreDrawer(){
   document.getElementById('drawerQibla').onclick = () => { close(); openQiblaModal(); };
   document.getElementById('drawerTaraweeh').onclick = () => { close(); openTaraweehModal(); };
   document.getElementById('drawerDictionary').onclick = () => { close(); openDictionaryModal(); };
+  document.getElementById('drawerExam').onclick = () => { close(); goToView('exam'); };
   document.getElementById('drawerDownloads').onclick = () => { close(); openDownloadManager(); };
   document.getElementById('drawerSettings').onclick = () => { close(); openSettingsModal(); };
   document.getElementById('drawerShare').onclick = () => { close(); shareApp(); };
