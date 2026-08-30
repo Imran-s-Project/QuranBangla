@@ -48,6 +48,7 @@
 <link rel="stylesheet" href="css/session-security.css">
 <link rel="stylesheet" href="css/mfa.css">
 <link rel="stylesheet" href="css/status.css">
+<link rel="stylesheet" href="css/profile-page.css">
 </head>
 <body data-theme="emerald">
 <script>
@@ -181,9 +182,24 @@
     <div class="exam-page-head">
       <h2><i class="fa-solid fa-pen-to-square"></i> পরীক্ষা দিন</h2>
       <p>নিচের যেকোনো পরীক্ষায় ট্যাপ করলেই সরাসরি সেই পরীক্ষা শুরু হবে।</p>
+      <!-- শুধু যাদের admins/{uid} ডকুমেন্টে isAdmin:true আছে তাদের জন্যই
+           দেখা যায় — পরীক্ষা ট্যাবে ঢোকার পরে যাচাই হয় (js/exam.js
+           checkExamAdminStatus)। ডিফল্টে লুকানো থাকে। -->
+      <button class="exam-admin-btn" id="examAdminBtn" style="display:none;">
+        <i class="fa-solid fa-user-shield"></i><span>এডমিন প্যানেল</span>
+      </button>
     </div>
     <div id="examListContainer">
       <div class="loader"><div class="spinner"></div><span>লোড হচ্ছে...</span></div>
+    </div>
+  </section>
+
+  <!-- ================= PROFILE ================= -->
+  <!-- সাইন আপ/লগইন এবং সাইন-ইন করা প্রোফাইল — সরাসরি এই পেজেই দেখানো হয়,
+       কোনো পপ-আপ/মডাল হিসেবে নয় (দেখুন js/profile-view.js)। -->
+  <section class="view" id="view-profile">
+    <div id="profileViewContainer">
+      <div class="profile-page-loading">লোড হচ্ছে...</div>
     </div>
   </section>
 
@@ -218,6 +234,10 @@
   <button class="bn-item" data-view="exam">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     <span>পরীক্ষা</span>
+  </button>
+  <button class="bn-item" data-view="profile">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+    <span>প্রোফাইল</span>
   </button>
 </nav>
 
@@ -653,6 +673,7 @@
 <script src="js/ramadan.js" defer></script>
 <script src="js/tajweed.js" defer></script>
 <script src="js/qibla.js" defer></script>
+<script src="js/profile-view.js" defer></script>
 <script src="js/nav.js" defer></script>
 <script src="js/menu.js" defer></script>
 <script src="js/exam.js" defer></script>

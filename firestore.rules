@@ -31,7 +31,7 @@ service cloud.firestore {
       allow read: if true;
 
       allow create: if isAdmin()
-        && request.resource.data.keys().hasOnly(['title','description','link','createdAt','createdBy','updatedAt'])
+        && request.resource.data.keys().hasOnly(['title','description','link','durationMinutes','questionCount','createdAt','createdBy','updatedAt'])
         && request.resource.data.keys().hasAll(['title','link','createdAt'])
         // title: বাধ্যতামূলক, ফাঁকা না, যুক্তিসঙ্গত দৈর্ঘ্যের মধ্যে
         && request.resource.data.title is string
@@ -46,15 +46,23 @@ service cloud.firestore {
         && request.resource.data.link is string
         && request.resource.data.link.size() <= 2048
         && request.resource.data.link.matches('^https?://.+')
+        // durationMinutes/questionCount: ঐচ্ছিক, দিলে অবশ্যই পূর্ণসংখ্যা ও ১-৯৯৯ এর মধ্যে
+        && (!('durationMinutes' in request.resource.data)
+            || (request.resource.data.durationMinutes is int
+                && request.resource.data.durationMinutes > 0 && request.resource.data.durationMinutes <= 999))
+        && (!('questionCount' in request.resource.data)
+            || (request.resource.data.questionCount is int
+                && request.resource.data.questionCount > 0 && request.resource.data.questionCount <= 999))
         // createdAt/createdBy: সার্ভার টাইমস্ট্যাম্প ও নিজের uid ছাড়া বসানো যাবে না
         && request.resource.data.createdAt == request.time
         && (!('createdBy' in request.resource.data) || request.resource.data.createdBy == request.auth.uid)
         && !('updatedAt' in request.resource.data);
 
       allow update: if isAdmin()
-        // createdAt/createdBy কখনো পরিবর্তন করা যাবে না — শুধু title/description/link/updatedAt
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','description','link','updatedAt'])
-        && request.resource.data.keys().hasOnly(['title','description','link','createdAt','createdBy','updatedAt'])
+        // createdAt/createdBy কখনো পরিবর্তন করা যাবে না — বাকিগুলোই বদলানো যাবে
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['title','description','link','durationMinutes','questionCount','updatedAt'])
+        && request.resource.data.keys().hasOnly(['title','description','link','durationMinutes','questionCount','createdAt','createdBy','updatedAt'])
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 200
@@ -63,6 +71,12 @@ service cloud.firestore {
         && request.resource.data.link is string
         && request.resource.data.link.size() <= 2048
         && request.resource.data.link.matches('^https?://.+')
+        && (!('durationMinutes' in request.resource.data)
+            || (request.resource.data.durationMinutes is int
+                && request.resource.data.durationMinutes > 0 && request.resource.data.durationMinutes <= 999))
+        && (!('questionCount' in request.resource.data)
+            || (request.resource.data.questionCount is int
+                && request.resource.data.questionCount > 0 && request.resource.data.questionCount <= 999))
         && ('updatedAt' in request.resource.data) && request.resource.data.updatedAt == request.time;
 
       allow delete: if isAdmin();

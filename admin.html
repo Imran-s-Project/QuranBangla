@@ -39,36 +39,19 @@
 
   .wrap{width:100%; max-width:640px; padding:20px 16px 60px;}
 
-  /* ---- Login screen ---- */
-  #loginScreen{
-    width:100%; max-width:380px; margin:auto; padding:20px 16px; display:flex; flex-direction:column; gap:0;
-    align-items:center; justify-content:center; min-height:80vh;
+  /* ---- Gate screen: shown while the existing site session is being
+     verified. Deliberately says nothing about "admin" — a non-admin
+     should never learn this page has an admin-only gate at all before
+     being sent to 404.html. ---- */
+  #gateScreen{
+    min-height:80vh; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:12px; color:var(--ink-soft); font-size:13.5px;
   }
-  .login-box{
-    background:var(--parchment); border:1px solid var(--line); border-radius:16px; padding:26px 22px;
-    width:100%; box-shadow:0 10px 30px rgba(0,0,0,.06);
+  #gateScreen .spinner{
+    width:26px; height:26px; border-radius:50%; border:3px solid var(--line);
+    border-top-color:var(--gold); animation:spin .8s linear infinite;
   }
-  .login-box h2{margin:0 0 4px; font-size:18px; display:flex; align-items:center; gap:8px;}
-  .login-box h2 i{color:var(--gold);}
-  .login-box p{margin:0 0 18px; font-size:13px; color:var(--ink-soft);}
-  .field{margin-bottom:12px;}
-  .field label{display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:5px;}
-  .field input, .field textarea{
-    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;
-    font-family:inherit; font-size:14px; background:#fff; color:var(--ink); outline:none;
-  }
-  .field input:focus, .field textarea:focus{border-color:var(--gold);}
-  #loginError, #adminGateMsg{
-    background:#fbeceb; border:1px solid #e6c6c1; color:var(--danger); font-size:12.5px;
-    padding:9px 12px; border-radius:8px; margin-top:10px; display:none;
-  }
-
-  /* ---- Not-admin gate ---- */
-  #notAdminScreen{
-    max-width:380px; margin:auto; min-height:80vh; display:none; flex-direction:column;
-    align-items:center; justify-content:center; text-align:center; gap:14px; padding:20px;
-  }
-  #notAdminScreen i{font-size:34px; color:var(--danger);}
+  @keyframes spin{to{transform:rotate(360deg);}}
 
   /* ---- Panel ---- */
   #panelScreen{display:none; width:100%;}
@@ -78,6 +61,14 @@
   }
   .card h3{margin:0 0 12px; font-size:14.5px; display:flex; align-items:center; gap:8px;}
   .card h3 i{color:var(--gold);}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:5px;}
+  .field input, .field textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;
+    font-family:inherit; font-size:14px; background:#fff; color:var(--ink); outline:none;
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--gold);}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   .exam-item{
     display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-bottom:1px solid var(--line);
   }
@@ -86,6 +77,12 @@
   .exam-item .ei-title{font-weight:600; font-size:14.5px; word-break:break-word;}
   .exam-item .ei-desc{font-size:12.5px; color:var(--ink-soft); margin-top:2px; word-break:break-word;}
   .exam-item .ei-link{font-size:12px; color:var(--gold); margin-top:4px; word-break:break-all; display:block;}
+  .exam-item .ei-meta{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
+  .ei-chip{
+    font-size:11.5px; color:var(--ink-soft); background:var(--sage); border-radius:999px;
+    padding:3px 10px; display:inline-flex; align-items:center; gap:5px;
+  }
+  .ei-chip i{color:var(--gold); font-size:10.5px;}
   .exam-item .ei-actions{display:flex; gap:6px; flex-shrink:0;}
   .icon-btn{
     width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:#fff;
@@ -115,35 +112,14 @@
   </div>
 </div>
 
-<!-- ---------- Login ---------- -->
-<div id="loginScreen">
-  <div class="login-box">
-    <h2><i class="fa-solid fa-lock"></i> অ্যাডমিন লগইন</h2>
-    <p>শুধুমাত্র অ্যাডমিন অ্যাকাউন্ট দিয়ে লগইন করলেই এই প্যানেলে ঢোকা যাবে।</p>
-    <div class="field">
-      <label for="loginEmail">ইমেইল</label>
-      <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username">
-    </div>
-    <div class="field">
-      <label for="loginPassword">পাসওয়ার্ড</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn btn-primary" id="loginBtn" style="width:100%; justify-content:center;">
-      <i class="fa-solid fa-right-to-bracket"></i> লগইন করুন
-    </button>
-    <div id="loginError"></div>
-  </div>
-</div>
-
-<!-- ---------- Not an admin ---------- -->
-<div id="notAdminScreen">
-  <i class="fa-solid fa-ban"></i>
-  <h2 style="margin:0;font-size:16px;">এই অ্যাকাউন্টটি অ্যাডমিন নয়</h2>
-  <p style="margin:0;font-size:13px;color:var(--ink-soft);">
-    এই ইমেইলে অ্যাডমিন অ্যাক্সেস নেই। সঠিক অ্যাডমিন অ্যাকাউন্ট দিয়ে আবার চেষ্টা করুন,
-    অথবা Firebase Console থেকে <code>admins</code> কালেকশনে এই ইউজারের UID যোগ করুন।
-  </p>
-  <button class="btn btn-outline" id="notAdminLogoutBtn"><i class="fa-solid fa-right-from-bracket"></i> সাইন আউট করে আবার চেষ্টা করুন</button>
+<!-- ---------- Verifying access ----------
+     This is the ONLY screen a non-admin (or signed-out visitor) ever sees
+     here — no login form, no "you are not an admin" message. As soon as
+     the check below resolves to "not a verified admin", the page is
+     replaced with 404.html so the panel's existence is never revealed. -->
+<div id="gateScreen">
+  <div class="spinner"></div>
+  <span>লোড হচ্ছে...</span>
 </div>
 
 <!-- ---------- Admin panel ---------- -->
@@ -161,6 +137,16 @@
     <div class="field">
       <label for="examLink">পরীক্ষার লিংক *</label>
       <input type="url" id="examLink" placeholder="https://...">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="examDuration">সময়সীমা (মিনিট, ঐচ্ছিক)</label>
+        <input type="number" id="examDuration" min="1" max="999" step="1" placeholder="যেমন: ৩০">
+      </div>
+      <div class="field">
+        <label for="examQCount">প্রশ্ন সংখ্যা (ঐচ্ছিক)</label>
+        <input type="number" id="examQCount" min="1" max="999" step="1" placeholder="যেমন: ২৫">
+      </div>
     </div>
     <button class="btn btn-primary" id="addExamBtn"><i class="fa-solid fa-plus"></i> যোগ করুন</button>
   </div>
@@ -180,8 +166,23 @@
 <script src="js/firebase-config.js"></script>
 <script>
 // ---------- Admin panel: exam-link CRUD ----------
+// Access model (hardened):
+//   This page has NO login form of its own. It only ever looks at whatever
+//   Firebase Auth session already exists on this device — the same session
+//   created by signing in normally on the main site (index.html / js/auth.js).
+//   Firebase Auth persists that session in this browser (LOCAL persistence,
+//   the SDK default), so an admin who is already signed in on the main site
+//   is automatically recognised here too, with no second login step.
+//
+//   On load:
+//     - No session at all, OR a session that is NOT a verified admin
+//       (admins/{uid} doc missing or isAdmin !== true) → the page is
+//       replaced with 404.html. Nothing about this page — not a login box,
+//       not a "you're not an admin" message — is ever shown to that visitor.
+//     - A verified admin session → the panel renders immediately.
+//
 // Access control has two layers, and BOTH must hold for a write to actually
-// happen — this file's checks are just for a clean UI; the real gate is the
+// happen — this file's checks are only for a clean UI; the real gate is the
 // `isAdmin()` rule in firestore.rules, which every Firestore write is
 // checked against no matter what this page does or doesn't show.
 //   1) The signed-in Firebase Auth user must have a doc at admins/{uid}
@@ -191,7 +192,6 @@
 
 let app, auth, db;
 let examsUnsub = null;
-let currentIsAdmin = false;
 
 function showToast(msg){
   const t = document.getElementById('toastBox');
@@ -200,18 +200,15 @@ function showToast(msg){
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-function showScreen(id){
-  ['loginScreen','notAdminScreen','panelScreen'].forEach(s => {
-    document.getElementById(s).style.display = 'none';
-  });
-  document.getElementById(id).style.display = (id === 'panelScreen') ? 'block' : 'flex';
-  document.getElementById('whoBox').style.display = (id === 'loginScreen') ? 'none' : 'flex';
+function goTo404(){
+  window.location.replace('404.html');
 }
 
 function init(){
   if(typeof firebase === 'undefined' || typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.apiKey){
-    document.getElementById('loginError').style.display = 'block';
-    document.getElementById('loginError').textContent = 'Firebase কনফিগার করা নেই — js/firebase-config.js চেক করুন।';
+    // Firebase can't even initialize — treat exactly like "not an admin":
+    // no error detail is exposed here either.
+    goTo404();
     return;
   }
   app = firebase.initializeApp(FIREBASE_CONFIG);
@@ -220,53 +217,39 @@ function init(){
 
   auth.onAuthStateChanged(async (user) => {
     if(examsUnsub){ examsUnsub(); examsUnsub = null; }
+
     if(!user){
-      currentIsAdmin = false;
-      showScreen('loginScreen');
+      goTo404();
       return;
     }
-    document.getElementById('whoEmail').textContent = user.email || '';
+
+    let isAdmin = false;
     try{
       const adminDoc = await db.collection('admins').doc(user.uid).get();
-      currentIsAdmin = adminDoc.exists && adminDoc.data().isAdmin === true;
+      isAdmin = adminDoc.exists && adminDoc.data().isAdmin === true;
     }catch(e){
-      currentIsAdmin = false;
+      isAdmin = false;
     }
-    if(currentIsAdmin){
-      showScreen('panelScreen');
-      startExamsListener();
-    } else {
-      showScreen('notAdminScreen');
+
+    if(!isAdmin){
+      goTo404();
+      return;
     }
+
+    document.getElementById('whoEmail').textContent = user.email || '';
+    document.getElementById('gateScreen').style.display = 'none';
+    document.getElementById('panelScreen').style.display = 'block';
+    document.getElementById('whoBox').style.display = 'flex';
+    startExamsListener();
   });
 
-  document.getElementById('loginBtn').onclick = doLogin;
-  document.getElementById('loginPassword').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
-  document.getElementById('logoutBtn').onclick = () => auth.signOut();
-  document.getElementById('notAdminLogoutBtn').onclick = () => auth.signOut();
+  document.getElementById('logoutBtn').onclick = async () => {
+    await auth.signOut();
+    // No session left to verify against here anymore — send them to the
+    // ordinary site instead of re-showing this page.
+    window.location.href = 'index.html';
+  };
   document.getElementById('addExamBtn').onclick = addExam;
-}
-
-async function doLogin(){
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const errBox = document.getElementById('loginError');
-  errBox.style.display = 'none';
-  if(!email || !password){
-    errBox.textContent = 'ইমেইল ও পাসওয়ার্ড দিন।';
-    errBox.style.display = 'block';
-    return;
-  }
-  const btn = document.getElementById('loginBtn');
-  btn.disabled = true;
-  try{
-    await auth.signInWithEmailAndPassword(email, password);
-  }catch(e){
-    errBox.textContent = 'লগইন ব্যর্থ হয়েছে — ইমেইল/পাসওয়ার্ড ঠিক আছে কিনা দেখুন।';
-    errBox.style.display = 'block';
-  }finally{
-    btn.disabled = false;
-  }
 }
 
 function startExamsListener(){
@@ -286,6 +269,17 @@ function startExamsListener(){
   );
 }
 
+function metaChipsHtml(data){
+  const chips = [];
+  if(Number.isFinite(data.durationMinutes)){
+    chips.push(`<span class="ei-chip"><i class="fa-solid fa-clock"></i> ${data.durationMinutes} মিনিট</span>`);
+  }
+  if(Number.isFinite(data.questionCount)){
+    chips.push(`<span class="ei-chip"><i class="fa-solid fa-list-ol"></i> ${data.questionCount} টি প্রশ্ন</span>`);
+  }
+  return chips.length ? `<div class="ei-meta">${chips.join('')}</div>` : '';
+}
+
 function renderExamRow(id, data){
   const row = document.createElement('div');
   row.className = 'exam-item';
@@ -294,6 +288,7 @@ function renderExamRow(id, data){
       <div class="ei-title">${escapeHtml(data.title || '(নাম নেই)')}</div>
       ${data.description ? `<div class="ei-desc">${escapeHtml(data.description)}</div>` : ''}
       <a class="ei-link" href="${escapeAttr(data.link || '#')}" target="_blank" rel="noopener">${escapeHtml(data.link || '')}</a>
+      ${metaChipsHtml(data)}
     </div>
     <div class="ei-actions">
       <button class="icon-btn" title="এডিট"><i class="fa-solid fa-pen"></i></button>
@@ -310,6 +305,10 @@ function editExam(id, data, row){
       <div class="field"><input type="text" class="edit-title" value="${escapeAttr(data.title || '')}" placeholder="পরীক্ষার নাম"></div>
       <div class="field"><textarea class="edit-desc" rows="2" placeholder="বিবরণ (ঐচ্ছিক)">${escapeHtml(data.description || '')}</textarea></div>
       <div class="field"><input type="url" class="edit-link" value="${escapeAttr(data.link || '')}" placeholder="https://..."></div>
+      <div class="field-row">
+        <div class="field"><input type="number" class="edit-duration" min="1" max="999" step="1" value="${Number.isFinite(data.durationMinutes) ? data.durationMinutes : ''}" placeholder="সময়সীমা (মিনিট)"></div>
+        <div class="field"><input type="number" class="edit-qcount" min="1" max="999" step="1" value="${Number.isFinite(data.questionCount) ? data.questionCount : ''}" placeholder="প্রশ্ন সংখ্যা"></div>
+      </div>
       <div class="form-actions">
         <button class="btn btn-primary edit-save"><i class="fa-solid fa-check"></i> সংরক্ষণ করুন</button>
         <button class="btn btn-outline edit-cancel">বাতিল</button>
@@ -320,12 +319,26 @@ function editExam(id, data, row){
     const title = row.querySelector('.edit-title').value.trim();
     const description = row.querySelector('.edit-desc').value.trim();
     const link = row.querySelector('.edit-link').value.trim();
+    const durationRaw = row.querySelector('.edit-duration').value.trim();
+    const qCountRaw = row.querySelector('.edit-qcount').value.trim();
     if(!title || !link){ showToast('নাম ও লিংক আবশ্যক'); return; }
+
+    const update = {
+      title, description, link,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const durationVal = parseNumericField(durationRaw, 'সময়সীমা');
+    if(durationVal === false) return;
+    if(durationVal !== null) update.durationMinutes = durationVal;
+    else update.durationMinutes = firebase.firestore.FieldValue.delete();
+
+    const qCountVal = parseNumericField(qCountRaw, 'প্রশ্ন সংখ্যা');
+    if(qCountVal === false) return;
+    if(qCountVal !== null) update.questionCount = qCountVal;
+    else update.questionCount = firebase.firestore.FieldValue.delete();
+
     try{
-      await db.collection('exams').doc(id).update({
-        title, description, link,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      await db.collection('exams').doc(id).update(update);
       showToast('পরিবর্তন সংরক্ষণ হয়েছে');
     }catch(e){
       showToast('সংরক্ষণ ব্যর্থ হয়েছে: ' + (e.message || ''));
@@ -343,10 +356,25 @@ async function deleteExam(id, title){
   }
 }
 
+// Validates an optional positive-integer field (duration / question count).
+// Returns: null (left empty — omit the field), a number (valid), or false
+// (invalid — a toast was already shown, caller should abort the save).
+function parseNumericField(raw, label){
+  if(!raw) return null;
+  const n = Number(raw);
+  if(!Number.isFinite(n) || !Number.isInteger(n) || n <= 0 || n > 999){
+    showToast(`${label} সঠিক একটি সংখ্যা (১-৯৯৯) হতে হবে`);
+    return false;
+  }
+  return n;
+}
+
 async function addExam(){
   const titleEl = document.getElementById('examTitle');
   const descEl = document.getElementById('examDesc');
   const linkEl = document.getElementById('examLink');
+  const durationEl = document.getElementById('examDuration');
+  const qCountEl = document.getElementById('examQCount');
   const title = titleEl.value.trim();
   const description = descEl.value.trim();
   const link = linkEl.value.trim();
@@ -356,15 +384,24 @@ async function addExam(){
   }catch(e){
     showToast('সঠিক একটি লিংক (URL) দিন'); return;
   }
+
+  const durationVal = parseNumericField(durationEl.value.trim(), 'সময়সীমা');
+  if(durationVal === false) return;
+  const qCountVal = parseNumericField(qCountEl.value.trim(), 'প্রশ্ন সংখ্যা');
+  if(qCountVal === false) return;
+
   const btn = document.getElementById('addExamBtn');
   btn.disabled = true;
   try{
-    await db.collection('exams').add({
+    const payload = {
       title, description, link,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       createdBy: auth.currentUser ? auth.currentUser.uid : null
-    });
-    titleEl.value = ''; descEl.value = ''; linkEl.value = '';
+    };
+    if(durationVal !== null) payload.durationMinutes = durationVal;
+    if(qCountVal !== null) payload.questionCount = qCountVal;
+    await db.collection('exams').add(payload);
+    titleEl.value = ''; descEl.value = ''; linkEl.value = ''; durationEl.value = ''; qCountEl.value = '';
     showToast('নতুন পরীক্ষা যোগ করা হয়েছে');
   }catch(e){
     showToast('যোগ করা ব্যর্থ হয়েছে: ' + (e.message || ''));
