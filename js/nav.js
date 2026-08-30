@@ -1,5 +1,5 @@
-// ---------- Bottom navigation: switches between the 5 top-level views ----------
-const VIEW_IDS = ['home','planner','topics','library','stats','hadith','exam'];
+// ---------- Bottom navigation: switches between the top-level views ----------
+const VIEW_IDS = ['home','planner','topics','library','stats','hadith','exam','profile'];
 
 function goToView(view){
   VIEW_IDS.forEach(v => {
@@ -19,6 +19,7 @@ function goToView(view){
   if(view === 'stats') renderStatsView();
   if(view === 'hadith') showHadithBooksView();
   if(view === 'exam' && typeof onExamViewOpened === 'function') onExamViewOpened();
+  if(view === 'profile' && typeof renderProfileView === 'function') renderProfileView();
   window.scrollTo(0,0);
   if(view !== 'home' && typeof onbMaybeStart === 'function') onbMaybeStart(view);
 }

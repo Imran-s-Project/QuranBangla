@@ -561,11 +561,12 @@ function renderStatsView(){
 
   document.getElementById('statsSeeAllBadges').onclick = openAllBadgesModal;
   const authBtn = document.getElementById('statsAuthBtn');
-  if(authBtn) authBtn.onclick = () => openAuthFlow('choice');
+  // সাইন আপ/লগইন পপ-আপ হিসেবে না দেখিয়ে সরাসরি "প্রোফাইল" পেজে নিয়ে যায় (js/profile-view.js)।
+  if(authBtn) authBtn.onclick = () => goToProfilePage('choice');
   const logoutBtn = document.getElementById('statsLogoutBtn');
   if(logoutBtn) logoutBtn.onclick = () => confirmLogout();
   const accountStripInfo = document.getElementById('statsAccountStripInfo');
-  if(accountStripInfo) accountStripInfo.onclick = () => openProfileModal();
+  if(accountStripInfo) accountStripInfo.onclick = () => goToProfilePage();
   const shareBtn = document.getElementById('statsOpenShareCard');
   if(shareBtn) shareBtn.onclick = () => openShareCardModal();
   const streakShareBtn = document.getElementById('statsOpenStreakShareCard');
