@@ -1,0 +1,13 @@
+/* ==== exam.css — full-page "পরীক্ষা" (Exam) tab: realtime exam-link list ==== */
+
+.exam-page-head{padding:6px 4px 16px;}
+.exam-page-head h2{
+  margin:0 0 4px; font-family:'Noto Serif Bengali',serif; font-size:19px; font-weight:700;
+  display:flex; align-items:center; gap:10px; color:var(--ink);
+}
+.exam-page-head h2 i{color:var(--gold); font-size:17px;}
+.exam-page-head p{margin:0; font-size:13px; color:var(--ink-soft);}
+
+#examListContainer .list-item{transition:background .15s ease;}
+#examListContainer .list-item:hover{background:var(--sage);}
+#examListContainer .list-item:active{background:var(--gold-soft, var(--sage));}
