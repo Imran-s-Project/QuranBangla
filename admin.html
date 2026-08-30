@@ -69,6 +69,14 @@
   }
   .field input:focus, .field textarea:focus{border-color:var(--gold);}
   .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .field-hint{font-size:11.5px; color:var(--ink-soft); margin-top:5px; line-height:1.5;}
+  .ei-status{
+    display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600;
+    border-radius:999px; padding:4px 10px; margin-top:6px;
+  }
+  .ei-status i{font-size:10.5px;}
+  .ei-status-scheduled{background:#fff2d9; color:#8a5a00;}
+  .ei-status-live{background:#e3f3e9; color:#1f7a4d;}
   .exam-item{
     display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-bottom:1px solid var(--line);
   }
@@ -147,6 +155,11 @@
         <label for="examQCount">প্রশ্ন সংখ্যা (ঐচ্ছিক)</label>
         <input type="number" id="examQCount" min="1" max="999" step="1" placeholder="যেমন: ২৫">
       </div>
+    </div>
+    <div class="field">
+      <label for="examPublishAt"><i class="fa-regular fa-clock" style="color:var(--gold);"></i> প্রকাশের সময় (ঐচ্ছিক)</label>
+      <input type="datetime-local" id="examPublishAt">
+      <div class="field-hint">খালি রাখলে পরীক্ষাটি এখনই সবাই দেখতে পাবে। সময় দিলে ইউজার সেকশনে ওই সময় পর্যন্ত লাইভ কাউন্টডাউন দেখাবে, এবং সময় হলে নিজে থেকেই (রিফ্রেশ ছাড়াই) আনলক হয়ে যাবে।</div>
     </div>
     <button class="btn btn-primary" id="addExamBtn"><i class="fa-solid fa-plus"></i> যোগ করুন</button>
   </div>
@@ -271,6 +284,37 @@ function startExamsListener(){
   );
 }
 
+// ---- publishAt (Firestore Timestamp) <-> <input type="datetime-local"> ----
+// datetime-local always works in the *browser's local* timezone, and
+// Timestamp.fromDate(new Date(thatString)) interprets it the same way —
+// so no manual UTC math needed, it round-trips correctly either way.
+function timestampToLocalInputValue(ts){
+  if(!ts || typeof ts.toDate !== 'function') return '';
+  const d = ts.toDate();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+// Returns: null (left empty — no publish-time set), a Firestore Timestamp
+// (valid), or false (invalid — caller should show an error and abort).
+function localInputValueToTimestamp(raw){
+  if(!raw) return null;
+  const d = new Date(raw);
+  if(isNaN(d.getTime())) return false;
+  return firebase.firestore.Timestamp.fromDate(d);
+}
+function formatPublishAtDisplay(ts){
+  if(!ts || typeof ts.toDate !== 'function') return '';
+  return ts.toDate().toLocaleString('bn-BD', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function publishStatusHtml(data){
+  if(!data.publishAt || typeof data.publishAt.toDate !== 'function') return '';
+  const future = data.publishAt.toDate().getTime() > Date.now();
+  const cls = future ? 'ei-status-scheduled' : 'ei-status-live';
+  const icon = future ? 'fa-hourglass-half' : 'fa-circle-check';
+  const label = future ? 'কাউন্টডাউন চলছে — প্রকাশ পাবে' : 'প্রকাশিত হয়ে গেছে';
+  return `<div class="ei-status ${cls}"><i class="fa-solid ${icon}"></i> ${label}: ${formatPublishAtDisplay(data.publishAt)}</div>`;
+}
+
 function metaChipsHtml(data){
   const chips = [];
   if(Number.isFinite(data.durationMinutes)){
@@ -291,6 +335,7 @@ function renderExamRow(id, data){
       ${data.description ? `<div class="ei-desc">${escapeHtml(data.description)}</div>` : ''}
       <a class="ei-link" href="${escapeAttr(data.link || '#')}" target="_blank" rel="noopener">${escapeHtml(data.link || '')}</a>
       ${metaChipsHtml(data)}
+      ${publishStatusHtml(data)}
     </div>
     <div class="ei-actions">
       <button class="icon-btn" title="এডিট"><i class="fa-solid fa-pen"></i></button>
@@ -311,6 +356,11 @@ function editExam(id, data, row){
         <div class="field"><input type="number" class="edit-duration" min="1" max="999" step="1" value="${Number.isFinite(data.durationMinutes) ? data.durationMinutes : ''}" placeholder="সময়সীমা (মিনিট)"></div>
         <div class="field"><input type="number" class="edit-qcount" min="1" max="999" step="1" value="${Number.isFinite(data.questionCount) ? data.questionCount : ''}" placeholder="প্রশ্ন সংখ্যা"></div>
       </div>
+      <div class="field">
+        <label><i class="fa-regular fa-clock" style="color:var(--gold);"></i> প্রকাশের সময় (ঐচ্ছিক)</label>
+        <input type="datetime-local" class="edit-publish" value="${timestampToLocalInputValue(data.publishAt)}">
+        <div class="field-hint">খালি রাখলে/মুছে দিলে পরীক্ষাটি এখনই সবার কাছে খোলা থাকবে।</div>
+      </div>
       <div class="form-actions">
         <button class="btn btn-primary edit-save"><i class="fa-solid fa-check"></i> সংরক্ষণ করুন</button>
         <button class="btn btn-outline edit-cancel">বাতিল</button>
@@ -323,6 +373,7 @@ function editExam(id, data, row){
     const link = row.querySelector('.edit-link').value.trim();
     const durationRaw = row.querySelector('.edit-duration').value.trim();
     const qCountRaw = row.querySelector('.edit-qcount').value.trim();
+    const publishRaw = row.querySelector('.edit-publish').value;
     if(!title || !link){ showToast('নাম ও লিংক আবশ্যক'); return; }
 
     const update = {
@@ -338,6 +389,11 @@ function editExam(id, data, row){
     if(qCountVal === false) return;
     if(qCountVal !== null) update.questionCount = qCountVal;
     else update.questionCount = firebase.firestore.FieldValue.delete();
+
+    const publishVal = localInputValueToTimestamp(publishRaw);
+    if(publishVal === false){ showToast('সঠিক একটি প্রকাশের সময় দিন'); return; }
+    if(publishVal !== null) update.publishAt = publishVal;
+    else update.publishAt = firebase.firestore.FieldValue.delete();
 
     try{
       await db.collection('exams').doc(id).update(update);
@@ -377,6 +433,7 @@ async function addExam(){
   const linkEl = document.getElementById('examLink');
   const durationEl = document.getElementById('examDuration');
   const qCountEl = document.getElementById('examQCount');
+  const publishAtEl = document.getElementById('examPublishAt');
   const title = titleEl.value.trim();
   const description = descEl.value.trim();
   const link = linkEl.value.trim();
@@ -391,6 +448,8 @@ async function addExam(){
   if(durationVal === false) return;
   const qCountVal = parseNumericField(qCountEl.value.trim(), 'প্রশ্ন সংখ্যা');
   if(qCountVal === false) return;
+  const publishAtVal = localInputValueToTimestamp(publishAtEl.value);
+  if(publishAtVal === false){ showToast('সঠিক একটি প্রকাশের সময় দিন'); return; }
 
   const btn = document.getElementById('addExamBtn');
   btn.disabled = true;
@@ -402,8 +461,9 @@ async function addExam(){
     };
     if(durationVal !== null) payload.durationMinutes = durationVal;
     if(qCountVal !== null) payload.questionCount = qCountVal;
+    if(publishAtVal !== null) payload.publishAt = publishAtVal;
     await db.collection('exams').add(payload);
-    titleEl.value = ''; descEl.value = ''; linkEl.value = ''; durationEl.value = ''; qCountEl.value = '';
+    titleEl.value = ''; descEl.value = ''; linkEl.value = ''; durationEl.value = ''; qCountEl.value = ''; publishAtEl.value = '';
     showToast('নতুন পরীক্ষা যোগ করা হয়েছে');
   }catch(e){
     showToast('যোগ করা ব্যর্থ হয়েছে: ' + (e.message || ''));

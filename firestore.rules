@@ -31,7 +31,7 @@ service cloud.firestore {
       allow read: if true;
 
       allow create: if isAdmin()
-        && request.resource.data.keys().hasOnly(['title','description','link','durationMinutes','questionCount','createdAt','createdBy','updatedAt'])
+        && request.resource.data.keys().hasOnly(['title','description','link','durationMinutes','questionCount','publishAt','createdAt','createdBy','updatedAt'])
         && request.resource.data.keys().hasAll(['title','link','createdAt'])
         // title: বাধ্যতামূলক, ফাঁকা না, যুক্তিসঙ্গত দৈর্ঘ্যের মধ্যে
         && request.resource.data.title is string
@@ -53,6 +53,10 @@ service cloud.firestore {
         && (!('questionCount' in request.resource.data)
             || (request.resource.data.questionCount is int
                 && request.resource.data.questionCount > 0 && request.resource.data.questionCount <= 999))
+        // publishAt: ঐচ্ছিক — এই সময়ের আগে ইউজার সেকশনে শুধু কাউন্টডাউন দেখা যাবে
+        // (link ক্লিকযোগ্য হবে না), সময় পার হলে js/exam.js অটো আনলক করে দেয়।
+        // দিলে অবশ্যই একটি টাইমস্ট্যাম্প হতে হবে।
+        && (!('publishAt' in request.resource.data) || request.resource.data.publishAt is timestamp)
         // createdAt/createdBy: সার্ভার টাইমস্ট্যাম্প ও নিজের uid ছাড়া বসানো যাবে না
         && request.resource.data.createdAt == request.time
         && (!('createdBy' in request.resource.data) || request.resource.data.createdBy == request.auth.uid)
@@ -61,8 +65,8 @@ service cloud.firestore {
       allow update: if isAdmin()
         // createdAt/createdBy কখনো পরিবর্তন করা যাবে না — বাকিগুলোই বদলানো যাবে
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['title','description','link','durationMinutes','questionCount','updatedAt'])
-        && request.resource.data.keys().hasOnly(['title','description','link','durationMinutes','questionCount','createdAt','createdBy','updatedAt'])
+             .hasOnly(['title','description','link','durationMinutes','questionCount','publishAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['title','description','link','durationMinutes','questionCount','publishAt','createdAt','createdBy','updatedAt'])
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 200
@@ -77,6 +81,7 @@ service cloud.firestore {
         && (!('questionCount' in request.resource.data)
             || (request.resource.data.questionCount is int
                 && request.resource.data.questionCount > 0 && request.resource.data.questionCount <= 999))
+        && (!('publishAt' in request.resource.data) || request.resource.data.publishAt is timestamp)
         && ('updatedAt' in request.resource.data) && request.resource.data.updatedAt == request.time;
 
       allow delete: if isAdmin();
