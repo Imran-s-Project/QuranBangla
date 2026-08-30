@@ -8,6 +8,70 @@
 .exam-page-head h2 i{color:var(--gold); font-size:17px;}
 .exam-page-head p{margin:0; font-size:13px; color:var(--ink-soft);}
 
+/* ---- Admin-only entry point — only visible to a verified admins/{uid}
+   account (js/exam.js checkExamAdminStatus). Styled distinctly (solid gold)
+   so it reads as a privileged action, not just another list item. ---- */
+.exam-admin-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;
+  margin-top:12px;padding:11px 16px;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-soft, var(--gold)) 100%);
+  color:var(--teal-deep, var(--teal));font-family:var(--font-ui,'Hind Siliguri'),sans-serif;
+  font-weight:700;font-size:13.5px;box-shadow:0 6px 16px -8px rgba(0,0,0,.35);
+}
+.exam-admin-btn i{font-size:14px;}
+.exam-admin-btn:active{opacity:.85;}
+
 #examListContainer .list-item{transition:background .15s ease;}
 #examListContainer .list-item:hover{background:var(--sage);}
 #examListContainer .list-item:active{background:var(--gold-soft, var(--sage));}
+
+/* ---- Modern exam card — deliberately its own component (not the generic
+   .list-item used elsewhere) so the এক্সাম section reads as a distinct,
+   more "smart" surface: icon tile, title/description, duration + question
+   count chips (set from the admin panel), and an arrow CTA. ---- */
+#examListContainer{display:flex; flex-direction:column; gap:10px;}
+.exam-card{
+  display:flex; align-items:flex-start; gap:13px; padding:14px;
+  background:var(--parchment); border:1px solid var(--line); border-radius:16px;
+  cursor:pointer; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.exam-card:hover, .exam-card:focus-visible{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px -12px rgba(0,0,0,.22);
+  border-color:var(--gold-soft, var(--gold));
+  outline:none;
+}
+.exam-card:active{transform:translateY(0); box-shadow:0 2px 8px -4px rgba(0,0,0,.2);}
+
+.exam-card-icon{
+  flex-shrink:0; width:44px; height:44px; border-radius:13px;
+  background:linear-gradient(135deg, var(--gold) 0%, var(--gold-soft, var(--gold)) 100%);
+  color:var(--teal-deep, var(--teal)); display:flex; align-items:center; justify-content:center;
+  font-size:16px; box-shadow:0 4px 12px -6px rgba(0,0,0,.3);
+}
+
+.exam-card-body{flex:1; min-width:0;}
+.exam-card-title{
+  font-family:'Noto Serif Bengali',serif; font-weight:700; font-size:15px; color:var(--ink);
+  word-break:break-word;
+}
+.exam-card-desc{
+  font-family:'Hind Siliguri',sans-serif; font-size:12.5px; color:var(--ink-soft);
+  margin-top:3px; line-height:1.55; word-break:break-word;
+}
+.exam-card-meta{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px;}
+.exam-chip{
+  display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600;
+  color:var(--ink-soft); background:var(--sage); border-radius:999px; padding:4px 10px;
+}
+.exam-chip i{color:var(--gold); font-size:10.5px;}
+
+.exam-card-cta{
+  flex-shrink:0; width:30px; height:30px; border-radius:50%; background:var(--sage);
+  color:var(--ink-soft); display:flex; align-items:center; justify-content:center;
+  font-size:12px; margin-top:2px; transition:background .18s ease, color .18s ease, transform .18s ease;
+}
+.exam-card:hover .exam-card-cta{
+  background:var(--gold); color:var(--teal-deep, #fff); transform:translateX(2px);
+}
