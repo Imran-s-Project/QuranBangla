@@ -24,6 +24,24 @@ let examListenerStarted = false;
 let examAdminCheckedUid = null; // uid the last admin check was run for
 let examIsAdminCache = false;
 
+// ---------- Live "প্রকাশের সময়" countdown ----------
+// examDoc.publishAt (optional Firestore Timestamp, set from admin.html) —
+// while it's in the future the card shows a locked, ticking countdown
+// instead of the normal clickable card. examCountdowns maps examId -> the
+// target Date, for every card currently counting down inside the DOM.
+// A single shared 1s interval updates every visible countdown's digits in
+// place (no full re-render, so it stays smooth), and the moment one hits
+// zero its card is swapped for the normal unlocked exam-card automatically
+// — no refresh, no waiting for a new Firestore snapshot.
+let examCountdowns = new Map(); // examId -> target Date
+let examCountdownTickHandle = null;
+let examListContainerEl = null;
+
+function examPublishDate(exam){
+  return (exam && exam.publishAt && typeof exam.publishAt.toDate === 'function')
+    ? exam.publishAt.toDate() : null;
+}
+
 // Called once from js/app.js during startup. The listener is opened right
 // away (not only when the tab is first tapped) so the page is already
 // populated the instant someone switches to it — same as how the surah
@@ -120,39 +138,158 @@ function startExamRealtimeRetry(){
 // duration (durationMinutes) and question count (questionCount) as small
 // info chips, so a student knows what they're getting into before tapping.
 function renderExamList(container){
+  examListContainerEl = container;
+  examCountdowns.clear(); // full rebuild below re-registers whichever are still locked
+
   if(!examListCache.length){
     container.innerHTML = `<div class="error-box">এখন কোনো পরীক্ষা চালু নেই। নতুন পরীক্ষা যোগ হলে এখানেই দেখা যাবে।</div>`;
+    stopExamCountdownTicker();
     return;
   }
   container.innerHTML = '';
   examListCache.forEach(exam => {
-    const card = document.createElement('div');
-    card.className = 'exam-card';
-    card.setAttribute('role', 'button');
-    card.tabIndex = 0;
-
-    const chips = [];
-    if(Number.isFinite(exam.durationMinutes)){
-      chips.push(`<span class="exam-chip"><i class="fa-regular fa-clock"></i> ${exam.durationMinutes} মিনিট</span>`);
-    }
-    if(Number.isFinite(exam.questionCount)){
-      chips.push(`<span class="exam-chip"><i class="fa-solid fa-list-ol"></i> ${exam.questionCount} টি প্রশ্ন</span>`);
-    }
-
-    card.innerHTML = `
-      <div class="exam-card-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-      <div class="exam-card-body">
-        <div class="exam-card-title">${escapeHtml(exam.title || 'পরীক্ষা')}</div>
-        ${exam.description ? `<div class="exam-card-desc">${escapeHtml(exam.description)}</div>` : ''}
-        ${chips.length ? `<div class="exam-card-meta">${chips.join('')}</div>` : ''}
-      </div>
-      <div class="exam-card-cta"><i class="fa-solid fa-arrow-right"></i></div>`;
-
-    const open = () => openExamConsentModal(exam.link);
-    card.onclick = open;
-    card.onkeydown = (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } };
+    const publishDate = examPublishDate(exam);
+    const isLocked = publishDate && publishDate.getTime() > Date.now();
+    const card = isLocked ? buildLockedExamCard(exam, publishDate) : buildUnlockedExamCard(exam);
+    if(isLocked) examCountdowns.set(exam.id, publishDate);
     container.appendChild(card);
   });
+  ensureExamCountdownTicker();
+}
+
+function examChipsHtml(exam){
+  const chips = [];
+  if(Number.isFinite(exam.durationMinutes)){
+    chips.push(`<span class="exam-chip"><i class="fa-regular fa-clock"></i> ${exam.durationMinutes} মিনিট</span>`);
+  }
+  if(Number.isFinite(exam.questionCount)){
+    chips.push(`<span class="exam-chip"><i class="fa-solid fa-list-ol"></i> ${exam.questionCount} টি প্রশ্ন</span>`);
+  }
+  return chips.length ? `<div class="exam-card-meta">${chips.join('')}</div>` : '';
+}
+
+// Normal, clickable card — used once an exam is (or becomes) published.
+function buildUnlockedExamCard(exam){
+  const card = document.createElement('div');
+  card.className = 'exam-card';
+  card.dataset.examId = exam.id;
+  card.setAttribute('role', 'button');
+  card.tabIndex = 0;
+
+  card.innerHTML = `
+    <div class="exam-card-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+    <div class="exam-card-body">
+      <div class="exam-card-title">${escapeHtml(exam.title || 'পরীক্ষা')}</div>
+      ${exam.description ? `<div class="exam-card-desc">${escapeHtml(exam.description)}</div>` : ''}
+      ${examChipsHtml(exam)}
+    </div>
+    <div class="exam-card-cta"><i class="fa-solid fa-arrow-right"></i></div>`;
+
+  const open = () => openExamConsentModal(exam.link);
+  card.onclick = open;
+  card.onkeydown = (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } };
+  return card;
+}
+
+// Locked card — shown while exam.publishAt is still in the future. Not
+// clickable; shows a live D/H/M/S countdown that ticks down to zero on its
+// own (see tickExamCountdowns), at which point this card is replaced with
+// buildUnlockedExamCard's version automatically.
+function buildLockedExamCard(exam, publishDate){
+  const card = document.createElement('div');
+  card.className = 'exam-card exam-card-locked';
+  card.dataset.examId = exam.id;
+
+  card.innerHTML = `
+    <div class="exam-card-icon exam-card-icon-locked"><i class="fa-solid fa-hourglass-half"></i></div>
+    <div class="exam-card-body">
+      <div class="exam-locked-badge"><i class="fa-solid fa-hourglass-half"></i> শীঘ্রই আসছে</div>
+      <div class="exam-card-title">${escapeHtml(exam.title || 'পরীক্ষা')}</div>
+      ${exam.description ? `<div class="exam-card-desc">${escapeHtml(exam.description)}</div>` : ''}
+      <div class="exam-countdown" role="timer" aria-live="off">
+        ${examCountdownUnitHtml('d','দিন')}
+        <div class="ecd-sep">:</div>
+        ${examCountdownUnitHtml('h','ঘণ্টা')}
+        <div class="ecd-sep">:</div>
+        ${examCountdownUnitHtml('m','মিনিট')}
+        <div class="ecd-sep">:</div>
+        ${examCountdownUnitHtml('s','সেকেন্ড')}
+      </div>
+      <div class="exam-publish-line"><i class="fa-regular fa-calendar-clock"></i> প্রকাশ পাবে: ${escapeHtml(formatExamPublishDate(publishDate))}</div>
+      ${examChipsHtml(exam)}
+    </div>`;
+
+  writeExamCountdownDigits(card, publishDate.getTime() - Date.now());
+  return card;
+}
+
+function examCountdownUnitHtml(unit, label){
+  return `<div class="ecd-unit"><span class="ecd-val" data-unit="${unit}">00</span><span class="ecd-label">${label}</span></div>`;
+}
+
+function formatExamPublishDate(d){
+  try{
+    return d.toLocaleString('bn-BD', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  }catch(e){
+    return d.toLocaleString();
+  }
+}
+
+// Updates just the four digit spans inside one locked card — called every
+// tick, so it must stay cheap (no innerHTML rebuild).
+function writeExamCountdownDigits(card, diffMs){
+  const clamped = Math.max(0, diffMs);
+  const totalSeconds = Math.floor(clamped / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = n => String(n).padStart(2, '0');
+  const set = (unit, val) => { const el = card.querySelector(`.ecd-val[data-unit="${unit}"]`); if(el) el.textContent = val; };
+  set('d', pad(days)); set('h', pad(hours)); set('m', pad(minutes)); set('s', pad(seconds));
+}
+
+function ensureExamCountdownTicker(){
+  if(examCountdownTickHandle || !examCountdowns.size) return;
+  examCountdownTickHandle = setInterval(tickExamCountdowns, 1000);
+}
+
+function stopExamCountdownTicker(){
+  if(examCountdownTickHandle){ clearInterval(examCountdownTickHandle); examCountdownTickHandle = null; }
+}
+
+// Runs every second: updates every still-locked card's digits, and the
+// instant one's target time is reached, swaps that single card for its
+// unlocked version with a smooth reveal — fully client-side, no reload and
+// no need to wait for another Firestore snapshot.
+function tickExamCountdowns(){
+  if(!examListContainerEl || !examCountdowns.size){ stopExamCountdownTicker(); return; }
+
+  examCountdowns.forEach((publishDate, examId) => {
+    const card = examListContainerEl.querySelector(`.exam-card-locked[data-exam-id="${cssEscapeExamId(examId)}"]`);
+    const diff = publishDate.getTime() - Date.now();
+
+    if(diff > 0){
+      if(card) writeExamCountdownDigits(card, diff);
+      return;
+    }
+
+    // Time's up — reveal the real card in place.
+    examCountdowns.delete(examId);
+    const exam = examListCache.find(e => e.id === examId);
+    if(card && exam){
+      const unlocked = buildUnlockedExamCard(exam);
+      unlocked.classList.add('exam-card-reveal');
+      card.replaceWith(unlocked);
+      setTimeout(() => unlocked.classList.remove('exam-card-reveal'), 900);
+    }
+  });
+
+  if(!examCountdowns.size) stopExamCountdownTicker();
+}
+
+function cssEscapeExamId(id){
+  return (window.CSS && CSS.escape) ? CSS.escape(id) : id.replace(/"/g, '\\"');
 }
 
 // ---------- Exam consent modal ----------
