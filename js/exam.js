@@ -49,7 +49,9 @@ function examPublishDate(exam){
 function initExam(){
   startExamRealtime();
   const adminBtn = document.getElementById('examAdminBtn');
-  if(adminBtn) adminBtn.onclick = () => window.open('admin.html', '_blank', 'noopener');
+  if(adminBtn) adminBtn.onclick = () => {
+    if(typeof AdminPanel !== 'undefined') AdminPanel.open();
+  };
 }
 
 // Called every time the "পরীক্ষা" tab (bottom nav or drawer) is opened.
